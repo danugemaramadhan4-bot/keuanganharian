@@ -283,7 +283,7 @@ function lineChart(days){
 }
 function home(){
 let t=totals(),e=dayExp(),left=Math.max(0,d.limit-e),m=d.tx.filter(x=>x.date.startsWith(today().slice(0,7))),mi=m.filter(x=>x.type==="income").reduce((a,x)=>a+x.amount,0),me=m.filter(x=>x.type==="expense").reduce((a,x)=>a+x.amount,0),net=mi-me;
-let days=[...Array(7)].map((_,i)=>{let z=new Date();z.setHours(0,0,0,0);z.setDate(z.getDate()-(6-i));let s=z.toISOString().slice(0,10),inc=d.tx.filter(x=>x.date===s&&x.type==="income").reduce((a,x)=>a+x.amount,0),ex=d.tx.filter(x=>x.date===s&&x.type==="expense").reduce((a,x)=>a+x.amount,0);return{l:z.toLocaleDateString("id-ID",{day:"2-digit",month:"short"}).replace(".",""),full:z.toLocaleDateString("id-ID",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),inc,ex,net:inc-ex}});
+let days=[...Array(7)].map((_,i)=>{let z=new Date();z.setHours(0,0,0,0);z.setDate(z.getDate()-(6-i));let s=z.getFullYear()+"-"+String(z.getMonth()+1).padStart(2,"0")+"-"+String(z.getDate()).padStart(2,"0"),inc=d.tx.filter(x=>x.date===s&&x.type==="income").reduce((a,x)=>a+x.amount,0),ex=d.tx.filter(x=>x.date===s&&x.type==="expense").reduce((a,x)=>a+x.amount,0);return{l:z.toLocaleDateString("id-ID",{day:"2-digit",month:"short"}).replace(".",""),full:z.toLocaleDateString("id-ID",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),inc,ex,net:inc-ex}});
 let spentPct=Math.min(100,Math.round((me/Math.max(mi||d.salary,1))*100)), netPct=Math.max(0,100-spentPct);
 $id("app").innerHTML=`
 <div class="top">
