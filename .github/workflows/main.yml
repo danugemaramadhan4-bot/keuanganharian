@@ -20,6 +20,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Find and Extract Native Project
         run: |
           set -e
@@ -38,7 +39,6 @@ jobs:
               echo "ZIP native ditemukan: $f"
               break
             fi
-
           done < <(
             find . -maxdepth 1 -type f -iname "*.zip" \
             ! -name "Keuangan_Harian_PWA.zip" \
@@ -47,13 +47,10 @@ jobs:
 
           if [ -z "$ZIP_FILE" ]; then
             echo "ERROR: ZIP project Android tidak ditemukan."
-            find . -maxdepth 1 -type f -iname "*.zip" -print
             exit 1
           fi
 
           unzip -q "$ZIP_FILE" -d extracted
-
-          echo "Mencari root project Gradle..."
 
           PROJECT_DIR=$(find extracted -type f \
             \( -name "settings.gradle.kts" -o -name "settings.gradle" \) \
@@ -61,40 +58,51 @@ jobs:
 
           if [ -z "$PROJECT_DIR" ]; then
             echo "ERROR: settings.gradle tidak ditemukan."
-            find extracted -maxdepth 5 -type f | head -100
             exit 1
           fi
 
-          echo "Project ditemukan:"
-          echo "$PROJECT_DIR"
+          echo "Project ditemukan: $PROJECT_DIR"
 
           mv "$PROJECT_DIR" native-project
 
-          echo "Isi project:"
-          find native-project -maxdepth 3 -type f | sort | head -100
+          echo "Project native siap."
 
-          test -f native-project/settings.gradle.kts -o \
-               -f native-project/settings.gradle
-
-          test -f native-project/build.gradle.kts -o \
-               -f native-project/build.gradle
-
-          
-                    echo "Project native siap."
-
-      - name: Fix Kotlin Plugin for AGP 9
+      - name: Fix Kotlin for AGP 9
         working-directory: native-project
         run: |
-          echo "Memperbaiki plugin Kotlin..."
+          set -e
+
+          echo "Menghapus plugin Kotlin Android lama..."
+
           find . -name "build.gradle.kts" -type f -print0 | while IFS= read -r -d '' file; do
             sed -i '/id("org.jetbrains.kotlin.android")/d' "$file"
             sed -i "/id('org.jetbrains.kotlin.android')/d" "$file"
           done
 
-          echo "Memeriksa plugin Kotlin:"
-          grep -R "org.jetbrains.kotlin.android" . --include="build.gradle.kts" || true
+          echo "Menghapus konfigurasi kotlinOptions lama..."
 
-            - name: Fix AndroidX Configuration
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for p in Path(".").rglob("build.gradle.kts"):
+              text = p.read_text()
+
+              fixed = re.sub(
+                  r'\n[ \t]*kotlinOptions\s*\{\s*jvmTarget\s*=\s*"17"\s*\}',
+                  '',
+                  text,
+                  flags=re.MULTILINE
+              )
+
+              if fixed != text:
+                  print("Diperbaiki:", p)
+                  p.write_text(fixed)
+          PY
+
+          echo "Pengecekan selesai."
+
+      - name: Fix AndroidX Configuration
         working-directory: native-project
         run: |
           cat > gradle.properties <<'EOF'
