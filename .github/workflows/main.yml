@@ -21,23 +21,34 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Extract Project
+      - name: Extract Native Project
         run: |
           unzip -q KeuanganHarianNative.zip -d extracted
+
           if [ -d "extracted/KeuanganHarianNative" ]; then
             mv extracted/KeuanganHarianNative native-project
           else
             mv extracted native-project
           fi
 
+      - name: Fix AndroidX Configuration
+        working-directory: native-project
+        run: |
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          EOF
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.13"
 
-      - name: Build APK
+      - name: Build Debug APK
         working-directory: native-project
-        run: gradle assembleDebug --no-daemon
+        run: |
+          gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
