@@ -1,0 +1,52 @@
+name: Build Keuangan Harian Native APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "KeuanganHarianNative.zip"
+      - ".github/workflows/main.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+
+      - name: Extract project
+        run: |
+          unzip -q KeuanganHarianNative.zip -d extracted
+          if [ -d "extracted/KeuanganHarianNative" ]; then
+            mv extracted/KeuanganHarianNative native-project
+          else
+            mv extracted native-project
+          fi
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+
+      - name: Build APK
+        working-directory: native-project
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeuanganHarian-debug
+          path: native-project/app/build/outputs/apk/debug/app-debug.apk
