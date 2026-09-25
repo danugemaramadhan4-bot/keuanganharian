@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "KeuanganHarianNative.zip"
+      - "*.zip"
       - ".github/workflows/main.yml"
 
 jobs:
@@ -21,15 +21,33 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Extract Native Project
+      - name: Find and Extract Native Project
         run: |
-          unzip -q KeuanganHarianNative.zip -d extracted
+          echo "Mencari file ZIP..."
+
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" ! -name "Keuangan_Harian_PWA.zip" | head -n 1)
+
+          echo "ZIP ditemukan: $ZIP_FILE"
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: ZIP aplikasi native tidak ditemukan."
+            exit 1
+          fi
+
+          unzip -q "$ZIP_FILE" -d extracted
+
+          echo "Isi hasil extract:"
+          find extracted -maxdepth 2 -type f | head -50
 
           if [ -d "extracted/KeuanganHarianNative" ]; then
             mv extracted/KeuanganHarianNative native-project
+          elif [ -d "extracted/KeuanganHarianNative-Baru" ]; then
+            mv extracted/KeuanganHarianNative-Baru native-project
           else
             mv extracted native-project
           fi
+
+          echo "Project native siap."
 
       - name: Fix AndroidX Configuration
         working-directory: native-project
