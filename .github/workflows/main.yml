@@ -94,12 +94,11 @@ jobs:
           echo "Memeriksa plugin Kotlin:"
           grep -R "org.jetbrains.kotlin.android" . --include="build.gradle.kts" || true
 
-      - name: Fix AndroidX Configuration
+            - name: Fix AndroidX Configuration
         working-directory: native-project
         run: |
           cat > gradle.properties <<'EOF'
           android.useAndroidX=true
-          android.enableJetifier=true
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           EOF
 
