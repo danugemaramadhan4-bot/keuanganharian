@@ -79,7 +79,20 @@ jobs:
           test -f native-project/build.gradle.kts -o \
                -f native-project/build.gradle
 
-          echo "Project native siap."
+          
+                    echo "Project native siap."
+
+      - name: Fix Kotlin Plugin for AGP 9
+        working-directory: native-project
+        run: |
+          echo "Memperbaiki plugin Kotlin..."
+          find . -name "build.gradle.kts" -type f -print0 | while IFS= read -r -d '' file; do
+            sed -i '/id("org.jetbrains.kotlin.android")/d' "$file"
+            sed -i "/id('org.jetbrains.kotlin.android')/d" "$file"
+          done
+
+          echo "Memeriksa plugin Kotlin:"
+          grep -R "org.jetbrains.kotlin.android" . --include="build.gradle.kts" || true
 
       - name: Fix AndroidX Configuration
         working-directory: native-project
